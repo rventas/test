@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Devo Test</title>		
+        <style>
+            .split {
+                height: 100%;
+                width: 50%;
+                position: fixed;
+                z-index: 1;
+                top: 20px;
+                overflow-x: hidden;
+                padding-top: 20px;
+            }
+            .left {
+                left: 0px;
+            }
+            .right {
+                right: 0px;
+            }
+        </style>
+    </head>
+    <body>
+    <script src="{{url_for('static', filename='highcharts.js')}}"></script>
+    <div class="split left">
+        <span id="grafico_lineas"></span>
+    </div>
+    <div class="split right">
+        <span id="pie_chart"></span>
+    </div>
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://localhost:9999/datos_grafico1");
+        xhttp.send();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                datos = JSON.parse(this.responseText)
+                pintarGraficoLineas(datos);
+            }
+        };
+        xhttp = new XMLHttpRequest();
+        xhttp.open("GET", "http://localhost:9999/datos_grafico2");
+        xhttp.send();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                datos = JSON.parse(this.responseText)
+                pintarGraficoPieChart(datos.data);
+            }
+        };
+
+    });
+    function pintarGraficoLineas(datos) {
+        let labels = datos['labels']        
+        datos_cat1 = recogerDatosCategoria(datos['cat1'], labels);
+        datos_cat2 = recogerDatosCategoria(datos['cat2'], labels);
+        datos_cat3 = recogerDatosCategoria(datos['cat3'], labels);
+        datos_cat4 = recogerDatosCategoria(datos['cat4'], labels);
+        Highcharts.chart('grafico_lineas', {        
+            chart: {
+                type: 'line',
+                width: 800
+            },
+            title: {
+                text: 'Datos por categoría y fecha'
+            },   
+            xAxis: {
+                categories: labels
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },            
+            series: [{
+                name: 'CAT 1',
+                data: datos_cat1
+            }, {
+                name: 'CAT 2',
+                data: datos_cat2
+            }, {
+                name: 'CAT 3',
+                data: datos_cat3
+            }, {
+                name: 'CAT 4',
+                data: datos_cat4
+            }],
+            responsive: {
+                rules: [{
+                condition: {
+                    maxWidth: 500
+                },
+                chartOptions: {
+                    legend: {
+                        layout: 'horizontal',
+                        align: 'center',
+                        verticalAlign: 'bottom'
+                    }
+                }
+            }]
+        }        
+        });        
+    };
+    function pintarGraficoPieChart(datos) {
+        Highcharts.chart('pie_chart', {
+            chart: {
+                type: 'pie'
+            },
+            title: {
+                text: 'Total por categorías'
+            },
+            series: [{
+                data: [{
+                name: datos[0][0],
+                y: datos[0][1],
+                sliced: true,
+                selected: true
+            }, {
+                name: datos[1][0],
+                y: datos[1][1]
+            }, {
+                name: datos[2][0],
+                y: datos[2][1]
+            }, {
+                name: datos[3][0],
+                y: datos[3][1]
+            }]            
+        }]
+        });
+    }
+    function recogerDatosCategoria(categorias, labels) {
+        let datos = [];
+        let i = 0;
+        labels.forEach(function(label) {           
+           let categoria = categorias[i];
+           if (categoria[1] == label) {
+               datos.push(categoria[2]);
+               i++;
+           } else {
+               datos.push(0);
+           }
+        });
+        return datos;
+    }
+    </script>
+    </body>
+</html>
